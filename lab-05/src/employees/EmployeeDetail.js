@@ -13,22 +13,40 @@ const url = employeeId => {
   return apiUrl;
 };
 
-class EmployeeDetail extends React.Component {
+export class EmployeeDetail extends React.Component {
   static propTypes = {
     history: PropTypes.object.isRequired
   };
 
   static defaultProps = {};
 
-  state = {};
+  state = { employee: null };
 
-  async componentDidMount() {}
+  async componentDidMount() {
+    const { _id } = this.props.match.params;
+    const { data: employee } = await Axios.get(url(_id));
+    this.setState({ employee });
+  }
 
-  onUpdate = async employee => {};
+  // updates employee if they already have an _id
+  onUpdate = async employee => { 
+    const response = await Axios.put(url(employee._id), employee);
+    return response.data;
+  };
+  //creates new employee record if _id is null
+  onCreate = async employee => {
+    const response = await Axios.post(url(employee._id), employee);
+    return response.data;
+   };
 
-  onCreate = async employee => {};
+  //  determines if employee should be updated or created based on _id
+  handleSave = values => {
+    const { history } = this.props;
 
-  handleSave = values => {};
+    const result = values._id ? this.onUpdate(values) : this.onCreate(values);
+    result.then(() => {
+      history.push('/employees');
+    });};
 
   render() {
     const { employee } = this.state;
@@ -37,7 +55,13 @@ class EmployeeDetail extends React.Component {
       return <div>Loading...</div>;
     }
 
-    return <div>TODO</div>;
+    return <div>
+      <h1>Employee Detail</h1>
+      <EmployeeForm
+        employee={this.state.employee}
+        handleSave={this.handleSave}
+      />
+    </div>;
   }
 }
 
